@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadoras Walmart — WFS (FBA) & FBM</title>
+  <style>
+    :root {
+      --walmart-blue: #0071ce;
+      --walmart-yellow: #ffc220;
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --good: #0a7a0a;
+      --bad: #b00020;
+      --border: #e5e7eb;
+      --focus: rgba(0,113,206,.15);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background: var(--bg); color: var(--text); }
+    header { background: var(--walmart-blue); color: #fff; padding: 16px; position: sticky; top: 0; z-index: 10; }
+    header .row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    header h1 { margin:0; font-size:18px; font-weight:800; letter-spacing:.2px; }
+    header .badge { background: var(--walmart-yellow); color:#333; padding:6px 10px; border-radius:999px; font-weight:800; font-size:12px; }
+    main { max-width: 920px; margin: 0 auto; padding: 16px; }
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .tab-btn {
+      border:1px solid var(--border); background:#fff; color:#111827; padding:10px 14px; border-radius:999px;
+      font-weight:700; cursor:pointer; box-shadow: 0 2px 0 rgba(0,0,0,.04);
+    }
+    .tab-btn.active { background: var(--walmart-yellow); border-color: #e6b100; }
+    .card { background: var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:16px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+    .title { margin:4px 0 12px; font-size:16px; font-weight:800; }
+    .grid { display:grid; gap:12px; grid-template-columns:1fr; }
+    @media (min-width:640px){ .grid.two { grid-template-columns:1fr 1fr; } .grid.three { grid-template-columns: repeat(3,1fr); } }
+    label { font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
+    input[type="number"], input[type="text"] {
+      width:100%; padding:12px; border:1px solid var(--border); border-radius:10px; background:#fff; font-size:16px; outline:none;
+    }
+    input[type="number"]:focus, input[type="text"]:focus { border-color:var(--walmart-blue); box-shadow:0 0 0 3px var(--focus); }
+    .row { display:flex; align-items:center; gap:12px; }
+    .switch { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border:1px dashed var(--border); border-radius:10px; background:#fff; }
+    .switch input { width:18px; height:18px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    button {
+      background: var(--walmart-yellow); color:#1f2937; border:1px solid #e6b100; border-radius:12px;
+      padding:12px 14px; font-weight:800; font-size:15px; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.08);
+    }
+    button.secondary { background:#e5e7eb; color:#111827; border-color:#d1d5db; }
+    button.ghost { background:transparent; border:1px solid var(--border); color:#111827; }
+    .result-card h3 { margin:0 0 8px; font-size:16px; }
+    .kpi { display:grid; grid-template-columns: repeat(2,1fr); gap:10px; margin-top:10px; }
+    @media (min-width:640px){ .kpi { grid-template-columns: repeat(4,1fr); } }
+    .kpi .item { border:1px solid var(--border); border-radius:10px; padding:10px; background:#fff; }
+    .kpi .label { font-size:12px; color:var(--muted); }
+    .kpi .value { font-size:18px; font-weight:800; margin-top:4px; }
+    .good { color: var(--good); }
+    .bad { color: var(--bad); }
+    .muted { color:var(--muted); }
+    .small { font-size:12px; }
+    .hint { font-size:12px; color:var(--muted); margin-top:6px; }
+    .divider { height:1px; background:var(--border); margin:10px 0; }
+    .warning { background:#fff4e5; color:#8a5300; border:1px solid #ffd18a; padding:10px; border-radius:10px; }
+    .table { width:100%; border-collapse: collapse; margin-top:8px; }
+    .table th, .table td { text-align:left; padding:8px 6px; border-bottom:1px dashed var(--border); }
+    .table th { font-size:12px; color:var(--muted); font-weight:700; }
+    .table td { font-size:14px; }
+    .footer { text-align:center; color:var(--muted); font-size:12px; padding:22px 0 40px; }
+    .pill { background:#eef6ff; color:var(--walmart-blue); padding:4px 8px; border-radius:999px; font-weight:700; font-size:12px; }
+    .topnote { font-size:12px; color:#fff; opacity:.9; }
+    .jsdot { width:10px; height:10px; border-radius:50%; background:#bbb; display:inline-block; margin-left:6px; vertical-align:middle; }
+    .jsdot.on { background:#2ecc71; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="row">
+      <h1>Calculadoras Walmart</h1>
+      <div class="badge">WFS (FBA) & FBM • margem alvo 13% <span id="jsok" class="jsdot"></span></div>
+    </div>
+    <div class="topnote">Taxas: Referral 15% (sobre venda) • Imposto fornecedor 7% (sobre custo)</div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button id="tabWFS" class="tab-btn active" onclick="switchTab('wfs')">WFS (FBA)</button>
+      <button id="tabFBM" class="tab-btn" onclick="switchTab('fbm')">FBM</button>
+    </div>
+
+    <!-- WFS (FBA) -->
+    <section id="panelWFS" class="card">
+      <div class="title">WFS (FBA) — Envio e Fulfillment pelo Walmart</div>
+      <div class="grid two">
+        <div>
+          <label for="w_cost">Custo do fornecedor (USD)</label>
+          <input id="w_cost" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 12.90" oninput="onCalcWFS()" />
+          <div class="hint">+7% de imposto do fornecedor será aplicado automaticamente.</div>
+        </div>
+        <div>
+          <label for="w_sell">Preço de venda desejado (opcional)</label>
+          <input id="w_sell" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 24.99" oninput="onCalcWFS()" />
+        </div>
+      </div>
+      <div class="grid two" style="margin-top:10px;">
+        <div>
+          <label for="w_weight">Peso (lb)</label>
+          <input id="w_weight" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 2.4" oninput="onCalcWFS()" />
+          <div class="hint">Tabela WFS: ≤1lb $3,45 • 2lb $4,95 • 3lb $5,45 • 4–40lb $5,75 + $0,40/lb acima de 4. &lt;$10: +$1.</div>
+        </div>
+        <div>
+          <label for="w_margin">Margem alvo (%)</label>
+          <input id="w_margin" type="number" min="0" step="0.1" inputmode="decimal" value="13" oninput="onCalcWFS()" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <label class="switch">
+          <input id="w_apparel" type="checkbox" onchange="onCalcWFS()" />
+          <span>É roupa (apparel)? +$0,50/peça</span>
+        </label>
+        <div style="min-width:120px;">
+          <label for="w_pieces">Peças por unidade</label>
+          <input id="w_pieces" type="number" min="1" step="1" inputmode="numeric" value="1" oninput="onCalcWFS()" />
+        </div>
+      </div>
+      <div class="grid two" style="margin-top:10px;">
+        <div>
+          <label for="w_inbound">Frete inbound p/ unidade (opcional)</label>
+          <input id="w_inbound" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 0.28" oninput="onCalcWFS()" />
+        </div>
+        <div>
+          <label for="w_other">Outros custos p/ unidade (opcional)</label>
+          <input id="w_other" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 0.20" oninput="onCalcWFS()" />
+        </div>
+      </div>
+      <div class="actions" style="margin-top:14px;">
+        <button type="button" onclick="onCalcWFS()">Calcular WFS</button>
+        <button class="secondary" type="button" onclick="resetWFS()">Limpar</button>
+      </div>
+
+      <section class="result-card" id="w_minSec" style="display:none;margin-top:12px;">
+        <h3>Preço mínimo para atingir a margem alvo (WFS)</h3>
+        <div class="kpi">
+          <div class="item"><div class="label">Preço mínimo sugerido</div><div class="value" id="w_minPrice">$0.00</div><div class="small muted" id="w_minNote"></div></div>
+          <div class="item"><div class="label">Lucro estimado</div><div class="value" id="w_minProfit">$0.00</div><div class="small muted" id="w_minMargin"></div></div>
+          <div class="item"><div class="label">Frete WFS</div><div class="value" id="w_minShip">$0.00</div><div class="small muted" id="w_minShipNote"></div></div>
+          <div class="item"><div class="label">Fee Walmart (15%)</div><div class="value" id="w_minFee">$0.00</div><div class="small muted">Sobre o preço sugerido</div></div>
+        </div>
+        <div class="divider"></div>
+        <div id="w_under10" class="warning" style="display:none;"></div>
+      </section>
+
+      <section class="result-card" id="w_desiredSec" style="display:none;margin-top:12px;">
+        <h3>Análise do preço de venda desejado (WFS)</h3>
+        <div class="kpi">
+          <div class="item"><div class="label">Lucro líquido</div><div class="value" id="w_profit">$0.00</div><div class="small muted" id="w_profitNote"></div></div>
+          <div class="item"><div class="label">Margem</div><div class="value" id="w_marginVal">0.00%</div><div class="small muted">Lucro / Venda</div></div>
+          <div class="item"><div class="label">ROI</div><div class="value" id="w_roi">0.00%</div><div class="small muted">Lucro / (Custos+Frete)</div></div>
+          <div class="item"><div class="label">Frete WFS</div><div class="value" id="w_ship">$0.00</div><div class="small muted" id="w_shipNote"></div></div>
+        </div>
+        <table class="table"><thead><tr><th>Componente</th><th>Valor</th></tr></thead><tbody id="w_break"></tbody></table>
+      </section>
+    </section>
+
+    <!-- FBM -->
+    <section id="panelFBM" class="card" style="display:none;">
+      <div class="title">FBM — Fulfillment por Você (envio próprio)</div>
+      <div class="grid two">
+        <div>
+          <label for="f_cost">Custo do fornecedor (USD)</label>
+          <input id="f_cost" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 12.90" oninput="onCalcFBM()" />
+          <div class="hint">+7% de imposto do fornecedor será aplicado automaticamente.</div>
+        </div>
+        <div>
+          <label for="f_sell">Preço de venda desejado (opcional)</label>
+          <input id="f_sell" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 24.99" oninput="onCalcFBM()" />
+        </div>
+      </div>
+      <div class="grid two" style="margin-top:10px;">
+        <div>
+          <label for="f_ship">Frete de envio por unidade (USD)</label>
+          <input id="f_ship" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 4.80" oninput="onCalcFBM()" />
+          <div class="hint">Informe seu custo real de postagem (varia por peso/zona).</div>
+        </div>
+        <div>
+          <label for="f_margin">Margem alvo (%)</label>
+          <input id="f_margin" type="number" min="0" step="0.1" inputmode="decimal" value="13" oninput="onCalcFBM()" />
+        </div>
+      </div>
+      <div class="grid two" style="margin-top:10px;">
+        <div>
+          <label for="f_inbound">Custo de embalagem/outros (opcional)</label>
+          <input id="f_inbound" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 0.35" oninput="onCalcFBM()" />
+          <div class="hint">Use para somar embalagem, etiqueta, etc.</div>
+        </div>
+        <div>
+          <label for="f_other">Outros custos p/ unidade (opcional)</label>
+          <input id="f_other" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 0.20" oninput="onCalcFBM()" />
+        </div>
+      </div>
+      <div class="actions" style="margin-top:14px;">
+        <button type="button" onclick="onCalcFBM()">Calcular FBM</button>
+        <button class="secondary" type="button" onclick="resetFBM()">Limpar</button>
+      </div>
+
+      <section class="result-card" id="f_minSec" style="display:none;margin-top:12px;">
+        <h3>Preço mínimo para atingir a margem alvo (FBM)</h3>
+        <div class="kpi">
+          <div class="item"><div class="label">Preço mínimo sugerido</div><div class="value" id="f_minPrice">$0.00</div><div class="small muted">Sem tabela WFS — frete informado por você</div></div>
+          <div class="item"><div class="label">Lucro estimado</div><div class="value" id="f_minProfit">$0.00</div><div class="small muted" id="f_minMargin"></div></div>
+          <div class="item"><div class="label">Frete informado</div><div class="value" id="f_minShip">$0.00</div><div class="small muted" id="f_minShipNote"></div></div>
+          <div class="item"><div class="label">Fee Walmart (15%)</div><div class="value" id="f_minFee">$0.00</div><div class="small muted">Sobre o preço sugerido</div></div>
+        </div>
+      </section>
+
+      <section class="result-card" id="f_desiredSec" style="display:none;margin-top:12px;">
+        <h3>Análise do preço de venda desejado (FBM)</h3>
+        <div class="kpi">
+          <div class="item"><div class="label">Lucro líquido</div><div class="value" id="f_profit">$0.00</div><div class="small muted" id="f_profitNote"></div></div>
+          <div class="item"><div class="label">Margem</div><div class="value" id="f_marginVal">0.00%</div><div class="small muted">Lucro / Venda</div></div>
+          <div class="item"><div class="label">ROI</div><div class="value" id="f_roi">0.00%</div><div class="small muted">Lucro / (Custos+Frete)</div></div>
+          <div class="item"><div class="label">Frete</div><div class="value" id="f_shipVal">$0.00</div><div class="small muted" id="f_shipNote"></div></div>
+        </div>
+        <table class="table"><thead><tr><th>Componente</th><th>Valor</th></tr></thead><tbody id="f_break"></tbody></table>
+      </section>
+    </section>
+
+    <section class="card">
+      <div class="title">Observações</div>
+      <div class="small">
+        <p>• <strong>WFS (FBA):</strong> Frete de saída conforme a tabela do Walmart, com regras para itens &lt;$10 e apparel. Fórmula do preço mínimo (margem alvo m): <span class="pill">Preço ≥ (Custos fixos + Frete) / (0,85 − m)</span></p>
+        <p>• <strong>FBM:</strong> Você informa o frete por unidade. Aplicamos a mesma fórmula, mas sem as regras da tabela WFS.</p>
+        <p>• <strong>Custos fixos</strong> = custo fornecedor + 7% imposto + inbound/embalagem + outros.</p>
+      </div>
+    </section>
+
+    <div class="footer">Feito com 💙 para vendedores Walmart Seller — © 2025</div>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => isFinite(n) ? "$" + n.toFixed(2) : "$0.00";
+    const pct = (n) => (isFinite(n) ? (n*100).toFixed(2) : "0.00") + "%";
+    function parseSafe(id){ const el=$(id); const raw=(el.value||"").trim(); const v=parseFloat(raw.replace(",", ".")); return isNaN(v)?0:v; }
+
+    function switchTab(name){
+      const wfs = $("panelWFS"), fbm = $("panelFBM");
+      const bW = $("tabWFS"), bF = $("tabFBM");
+      if (name === "wfs"){ wfs.style.display=""; fbm.style.display="none"; bW.classList.add("active"); bF.classList.remove("active"); }
+      else { wfs.style.display="none"; fbm.style.display=""; bF.classList.add("active"); bW.classList.remove("active"); }
+    }
+    window.addEventListener("load", () => { const d=$("jsok"); if(d) d.classList.add("on"); });
+
+    // === WFS (FBA) logic ===
+    function wfsBaseByWeight(lb){
+      if (lb <= 0) return 0;
+      if (lb <= 1) return 3.45;
+      if (lb <= 2) return 4.95;
+      if (lb <= 3) return 5.45;
+      if (lb <= 40){
+        const extra = Math.max(0, Math.ceil(lb) - 4) * 0.40;
+        return 5.75 + extra;
+      }
+      return NaN;
+    }
+    function wfsShipTotal(weight, salePrice, isApparel, pieces){
+      const base = wfsBaseByWeight(weight);
+      if (!isFinite(base)) return { total: NaN, base:NaN, under10:0, apparel:0 };
+      const under10 = (salePrice > 0 && salePrice < 10) ? 1 : 0;
+      const apparel = isApparel ? (0.50 * Math.max(1, Math.floor(pieces||1))) : 0;
+      return { total: base + under10 + apparel, base, under10, apparel };
+    }
+    function onCalcWFS(){
+      const cost = parseSafe("w_cost");
+      const sell = parseSafe("w_sell");
+      const weight = parseSafe("w_weight");
+      const isApparel = $("w_apparel").checked;
+      const pieces = parseSafe("w_pieces") || 1;
+      const inbound = parseSafe("w_inbound");
+      const other = parseSafe("w_other");
+      const target = parseSafe("w_margin") || 13;
+
+      const costTax = cost * 0.07;
+      const fixed = cost + costTax + inbound + other;
+      const denom = 0.85 - (target/100);
+      if (denom > 0){
+        const shipAssume10 = wfsShipTotal(weight, 10, isApparel, pieces);
+        let minPrice = (fixed + shipAssume10.total)/denom;
+        let hitUnder10 = false;
+        let usedShip = shipAssume10;
+        if (minPrice < 10){
+          const shipUnder = wfsShipTotal(weight, 9.99, isApparel, pieces);
+          const min2 = (fixed + shipUnder.total)/denom;
+          if (min2 < 10){ minPrice = min2; hitUnder10 = true; usedShip = shipUnder; }
+          else { minPrice = (fixed + shipAssume10.total)/denom; usedShip = shipAssume10; }
+        }
+        if (isFinite(minPrice)){
+          $("w_minSec").style.display = "";
+          $("w_minPrice").textContent = fmt(minPrice);
+          const fee = 0.15*minPrice;
+          const profit = minPrice - fee - usedShip.total - fixed;
+          $("w_minProfit").textContent = fmt(profit);
+          $("w_minMargin").textContent = "Margem alvo: "+target.toFixed(2)+"%";
+          $("w_minShip").textContent = fmt(usedShip.total);
+          $("w_minShipNote").textContent = `Base ${fmt(usedShip.base)}${usedShip.under10? " + $1 (<$10)": ""}${usedShip.apparel? " + "+fmt(usedShip.apparel)+" (roupa)": ""}`;
+          $("w_minFee").textContent = fmt(fee);
+          const warn = $("w_under10");
+          if (hitUnder10){ warn.style.display=""; warn.innerHTML="Preço sugerido cai na faixa <strong>&lt; $10</strong>. O +$1 no frete já foi considerado."; }
+          else { warn.style.display="none"; }
+          $("w_minNote").textContent = hitUnder10 ? "Faixa: < $10" : "Faixa: ≥ $10";
+        }
+      } else {
+        $("w_minSec").style.display = "none";
+      }
+
+      if (sell > 0){
+        const ship = wfsShipTotal(weight, sell, isApparel, pieces);
+        if (!isFinite(ship.total)){
+          $("w_desiredSec").style.display="";
+          $("w_profit").textContent="—"; $("w_marginVal").textContent="—"; $("w_roi").textContent="—";
+          $("w_ship").textContent="—"; $("w_shipNote").textContent="Peso acima de 40 lb não suportado.";
+          $("w_profitNote").textContent=""; $("w_break").innerHTML="";
+          return;
+        }
+        const fee = 0.15*sell;
+        const profit = sell - fee - ship.total - fixed;
+        const margin = sell>0? (profit/sell): NaN;
+        const roi = (fixed + ship.total)>0? (profit/(fixed+ship.total)): NaN;
+
+        $("w_desiredSec").style.display="";
+        $("w_profit").textContent = fmt(profit);
+        $("w_profit").className = "value " + (profit>=0? "good":"bad");
+        $("w_marginVal").textContent = pct(margin);
+        $("w_marginVal").className = "value " + (margin>=(target/100)? "good":"bad");
+        $("w_roi").textContent = pct(roi);
+        $("w_ship").textContent = fmt(ship.total);
+        $("w_shipNote").textContent = `Base ${fmt(ship.base)}${ship.under10? " + $1 (<$10)": ""}${ship.apparel? " + "+fmt(ship.apparel)+" (roupa)": ""}`;
+        $("w_profitNote").textContent = "Fee Walmart: "+fmt(fee)+" • Custos fixos: "+fmt(fixed);
+        const rows = [
+          ["Custo do fornecedor", fmt(cost)],
+          ["Imposto do fornecedor (7%)", fmt(costTax)],
+          ["Inbound por unidade", fmt(inbound)],
+          ["Outros custos por unidade", fmt(other)],
+          ["Custos fixos (sub-total)", fmt(fixed)],
+          ["Frete WFS — base", fmt(ship.base)],
+          ["Frete WFS — adicional <$10", fmt(ship.under10)],
+          ["Frete WFS — roupa", fmt(ship.apparel)],
+          ["Frete WFS — total", "<strong>"+fmt(ship.total)+"</strong>"],
+          ["Fee Walmart (15%)", fmt(fee)],
+          ["Lucro líquido", "<strong>"+fmt(profit)+"</strong>"],
+          ["Margem", "<strong>"+pct(margin)+"</strong>"],
+          ["ROI", "<strong>"+pct(roi)+"</strong>"],
+        ];
+        $("w_break").innerHTML = rows.map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join("");
+      } else {
+        $("w_desiredSec").style.display="none";
+      }
+    }
+    function resetWFS(){
+      ["w_cost","w_sell","w_weight","w_inbound","w_other"].forEach(id=>$(id).value="");
+      $("w_margin").value=13; $("w_apparel").checked=false; $("w_pieces").value=1;
+      $("w_minSec").style.display="none"; $("w_desiredSec").style.display="none";
+    }
+
+    // === FBM logic ===
+    function onCalcFBM(){
+      const cost = parseSafe("f_cost");
+      const sell = parseSafe("f_sell");
+      const ship = parseSafe("f_ship");
+      const inbound = parseSafe("f_inbound");
+      const other = parseSafe("f_other");
+      const target = parseSafe("f_margin") || 13;
+
+      const costTax = cost * 0.07;
+      const fixed = cost + costTax + inbound + other;
+      const denom = 0.85 - (target/100);
+
+      if (denom > 0){
+        const minPrice = (fixed + ship) / denom;
+        if (isFinite(minPrice)){
+          $("f_minSec").style.display="";
+          $("f_minPrice").textContent = fmt(minPrice);
+          const fee = 0.15*minPrice;
+          const profit = minPrice - fee - ship - fixed;
+          $("f_minProfit").textContent = fmt(profit);
+          $("f_minMargin").textContent = "Margem alvo: "+target.toFixed(2)+"%";
+          $("f_minShip").textContent = fmt(ship);
+          $("f_minShipNote").textContent = "Frete informado manualmente";
+          $("f_minFee").textContent = fmt(fee);
+        }
+      } else {
+        $("f_minSec").style.display="none";
+      }
+
+      if (sell > 0){
+        const fee = 0.15*sell;
+        const profit = sell - fee - ship - fixed;
+        const margin = sell>0? (profit/sell): NaN;
+        const roi = (fixed+ship)>0? (profit/(fixed+ship)): NaN;
+
+        $("f_desiredSec").style.display="";
+        $("f_profit").textContent = fmt(profit);
+        $("f_profit").className = "value " + (profit>=0? "good":"bad");
+        $("f_marginVal").textContent = pct(margin);
+        $("f_marginVal").className = "value " + (margin>=(target/100)? "good":"bad");
+        $("f_roi").textContent = pct(roi);
+        $("f_shipVal").textContent = fmt(ship);
+        $("f_shipNote").textContent = "Frete informado manualmente";
+        $("f_profitNote").textContent = "Fee Walmart: "+fmt(fee)+" • Custos fixos: "+fmt(fixed);
+
+        const rows = [
+          ["Custo do fornecedor", fmt(cost)],
+          ["Imposto do fornecedor (7%)", fmt(costTax)],
+          ["Embalagem/Inbound", fmt(inbound)],
+          ["Outros custos por unidade", fmt(other)],
+          ["Custos fixos (sub-total)", fmt(fixed)],
+          ["Frete (informado)", "<strong>"+fmt(ship)+"</strong>"],
+          ["Fee Walmart (15%)", fmt(fee)],
+          ["Lucro líquido", "<strong>"+fmt(profit)+"</strong>"],
+          ["Margem", "<strong>"+pct(margin)+"</strong>"],
+          ["ROI", "<strong>"+pct(roi)+"</strong>"]
+        ];
+        $("f_break").innerHTML = rows.map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join("");
+      } else {
+        $("f_desiredSec").style.display="none";
+      }
+    }
+    function resetFBM(){
+      ["f_cost","f_sell","f_ship","f_inbound","f_other"].forEach(id=>$(id).value="");
+      $("f_margin").value=13;
+      $("f_minSec").style.display="none"; $("f_desiredSec").style.display="none";
+    }
+  </script>
+</body>
+</html>
